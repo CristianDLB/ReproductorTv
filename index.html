@@ -24,12 +24,14 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
             height: 100vh;
+            height: 100dvh;
             width: 100vw;
         }
 
         .app-container {
             display: flex;
             height: 100vh;
+            height: 100dvh;
             width: 100vw;
             position: relative;
             flex-direction: row;
@@ -236,6 +238,7 @@
             display: flex;
             position: relative;
             background: #000;
+            height: 100%;
         }
 
         .player-wrapper {
@@ -259,7 +262,7 @@
             top: 0;
             left: 0;
             right: 0;
-            padding: 24px 30px;
+            padding: 20px 24px;
             background: linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, transparent 100%);
             display: flex;
             align-items: center;
@@ -270,7 +273,6 @@
             z-index: 10;
         }
 
-        /* En pantalla normal: hover de escritorio */
         .player-wrapper:hover .player-header,
         .player-wrapper:hover .controls-overlay {
             opacity: 1;
@@ -278,8 +280,8 @@
         }
 
         .player-channel-logo {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             border-radius: 10px;
             object-fit: cover;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -293,7 +295,7 @@
         }
 
         .player-channel-name {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 700;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
         }
@@ -303,11 +305,11 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
-            padding: 0 30px 20px 30px;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.5) 70%, transparent 100%);
+            padding: 12px 20px 14px 20px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
@@ -340,7 +342,7 @@
         .right-controls {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
 
         .btn-control {
@@ -355,6 +357,7 @@
             height: 40px;
             border-radius: 50%;
             transition: background 0.2s ease, transform 0.1s ease;
+            flex-shrink: 0;
         }
 
         .btn-control:hover {
@@ -372,13 +375,14 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
             color: #e50914;
             background: rgba(229, 9, 20, 0.15);
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 4px;
             border: 1px solid rgba(229, 9, 20, 0.3);
+            white-space: nowrap;
         }
 
         /* MENÚ DE CALIDAD */
@@ -388,14 +392,14 @@
 
         .quality-popup-menu {
             position: absolute;
-            bottom: 52px;
+            bottom: 50px;
             right: 0;
             background: rgba(20, 20, 24, 0.96);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             padding: 8px 0;
-            width: 310px;
+            width: 280px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
             display: none;
             flex-direction: column;
@@ -411,7 +415,7 @@
             align-items: center;
             padding: 8px 16px;
             cursor: pointer;
-            font-size: 0.92rem;
+            font-size: 0.9rem;
             color: rgba(255, 255, 255, 0.85);
             transition: background 0.15s ease;
             gap: 8px;
@@ -456,7 +460,7 @@
         }
 
         .quality-details-text {
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             color: rgba(255, 255, 255, 0.5);
             font-weight: 400;
             margin-left: auto;
@@ -472,7 +476,6 @@
             background-color: rgba(0, 0, 0, 0.5);
             padding: 4px 8px;
             border-radius: 4px;
-            margin-right: 8px;
             user-select: none;
         }
 
@@ -490,14 +493,13 @@
             box-shadow: 0 0 6px #dc3545;
         }
 
-        /* ESTADO FORZADO PARA MÓVILES Y PANTALLA COMPLETA CUANDO SE TOCA LA PANTALLA */
+        /* ESTADO FORZADO PARA MÓVILES */
         #playerWrapper.touch-controls-visible .controls-overlay,
         #playerWrapper.touch-controls-visible .player-header {
             opacity: 1 !important;
             pointer-events: auto !important;
         }
 
-        /* Ocultamiento automático en pantalla completa */
         #playerWrapper.hide-controls .controls-overlay,
         #playerWrapper.hide-controls .player-header,
         #playerWrapper.hide-controls #qualityPopupMenu {
@@ -589,19 +591,20 @@
             .main-content {
                 width: 100vw;
                 height: 100vh;
+                height: 100dvh;
             }
 
             .controls-overlay {
-                padding: 0 16px 16px 16px;
+                padding: 10px 14px 12px 14px;
             }
 
             .player-header {
-                padding: 16px 16px 16px 70px;
+                padding: 14px 14px 14px 65px;
             }
 
             .left-controls,
             .right-controls {
-                gap: 10px;
+                gap: 8px;
             }
 
             .buffer-health-tag {
@@ -613,8 +616,9 @@
             }
 
             .quality-popup-menu {
-                width: 260px;
-                right: -20px;
+                width: 240px;
+                right: -10px;
+                bottom: 45px;
             }
         }
     </style>
@@ -624,7 +628,6 @@
 
     <div class="app-container">
 
-        <!-- Botón flotante para desplegar canales en móvil -->
         <button class="mobile-menu-btn" id="mobileMenuBtn" title="Abrir Canales">
             <svg viewBox="0 0 24 24">
                 <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
@@ -996,7 +999,6 @@
             qualityPopupMenu.classList.remove('show');
         }
 
-        // Eventos
         playStopBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             if (video.paused) {
@@ -1065,21 +1067,17 @@
 
         searchBox.addEventListener('input', (e) => renderChannels(e.target.value));
 
-        // LÓGICA TÁCTIL Y DE PANTALLA COMPLETA ROBUSTA PARA MÓVILES REALES
         function handleMobileTap(e) {
-            // Si hace click o toque dentro de los menús o botones, no alternar
             if (e.target.closest('.quality-popup-menu, .sidebar, .mobile-menu-btn, .controls-overlay, .player-header')) return;
 
             const isVisible = playerWrapper.classList.contains('touch-controls-visible') || playerWrapper.classList.contains('show-controls');
 
             if (isVisible) {
-                // Ocultar controles manualmente si ya están visibles
                 playerWrapper.classList.remove('touch-controls-visible', 'show-controls');
                 playerWrapper.classList.add('hide-controls');
                 if (qualityPopupMenu) qualityPopupMenu.classList.remove('show');
                 clearTimeout(controlsTimeout);
             } else {
-                // Mostrar controles y configurar auto-ocultamiento si está en pantalla completa
                 playerWrapper.classList.remove('hide-controls');
                 playerWrapper.classList.add('touch-controls-visible');
                 clearTimeout(controlsTimeout);
@@ -1124,7 +1122,6 @@
             }
         }, 1000);
 
-        // Desmutear automáticamente al primer toque del usuario
         document.addEventListener('touchstart', function unmuter() {
             if (video.muted) {
                 video.muted = false;
