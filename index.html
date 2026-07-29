@@ -239,6 +239,7 @@
             position: relative;
             background: #000;
             height: 100%;
+            overflow: hidden;
         }
 
         .player-wrapper {
@@ -255,6 +256,7 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
+            display: block;
         }
 
         .player-header {
@@ -267,16 +269,9 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            opacity: 0;
-            pointer-events: none;
+            opacity: 1;
             transition: opacity 0.3s ease;
             z-index: 10;
-        }
-
-        .player-wrapper:hover .player-header,
-        .player-wrapper:hover .controls-overlay {
-            opacity: 1;
-            pointer-events: auto;
         }
 
         .player-channel-logo {
@@ -305,15 +300,14 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(0deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.5) 70%, transparent 100%);
-            padding: 12px 20px 14px 20px;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.6) 70%, transparent 100%);
+            padding: 14px 16px;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            opacity: 0;
-            pointer-events: none;
+            opacity: 1;
             transition: opacity 0.3s ease;
-            z-index: 10;
+            z-index: 20;
         }
 
         .live-progress-bar {
@@ -342,7 +336,7 @@
         .right-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .btn-control {
@@ -493,23 +487,21 @@
             box-shadow: 0 0 6px #dc3545;
         }
 
-        /* ESTADO FORZADO PARA MÓVILES */
-        #playerWrapper.touch-controls-visible .controls-overlay,
-        #playerWrapper.touch-controls-visible .player-header {
-            opacity: 1 !important;
-            pointer-events: auto !important;
-        }
-
-        #playerWrapper.hide-controls .controls-overlay,
-        #playerWrapper.hide-controls .player-header,
-        #playerWrapper.hide-controls #qualityPopupMenu {
+        /* ESTADOS DE VISIBILIDAD DINÁMICA (SOLO EN PANTALLA COMPLETA O CUANDO ESTÁ ACTIVO EL HOVER EN NORMAL) */
+        .player-wrapper.in-fullscreen.hide-controls .controls-overlay,
+        .player-wrapper.in-fullscreen.hide-controls .player-header,
+        .player-wrapper.in-fullscreen.hide-controls #qualityPopupMenu,
+        .player-wrapper.normal-autohide .controls-overlay,
+        .player-wrapper.normal-autohide .player-header,
+        .player-wrapper.normal-autohide #qualityPopupMenu {
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
             transition: opacity 0.4s ease, visibility 0.4s ease;
         }
 
-        #playerWrapper.hide-controls {
+        .player-wrapper.in-fullscreen.hide-controls,
+        .player-wrapper.normal-autohide {
             cursor: none !important;
         }
 
@@ -595,7 +587,7 @@
             }
 
             .controls-overlay {
-                padding: 10px 14px 12px 14px;
+                padding: 10px 12px 14px 12px;
             }
 
             .player-header {
@@ -604,7 +596,7 @@
 
             .left-controls,
             .right-controls {
-                gap: 8px;
+                gap: 6px;
             }
 
             .buffer-health-tag {
@@ -616,8 +608,8 @@
             }
 
             .quality-popup-menu {
-                width: 240px;
-                right: -10px;
+                width: 230px;
+                right: 0;
                 bottom: 45px;
             }
         }
@@ -718,7 +710,7 @@
                                 <button class="btn-control" id="qualityBtn" title="Calidad">
                                     <svg viewBox="0 0 24 24">
                                         <path
-                                            d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c-.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z" />
+                                            d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c-.05.24.24.41.48.41h3.84c-.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z" />
                                     </svg>
                                 </button>
                                 <div class="quality-popup-menu" id="qualityPopupMenu"></div>
@@ -787,7 +779,7 @@
         let currentChannel = null;
         let controlsTimeout = null;
 
-        const TIEMPO_OCULTAR_CONTROLES = 2000;
+        const TIEMPO_OCULTAR_CONTROLES = 1000;
 
         function renderChannels(filter = "") {
             channelListContainer.innerHTML = "";
@@ -852,8 +844,6 @@
                     liveDurationInfinity: true,
                     lowLatencyMode: true,
                     enableWorker: true,
-                    liveSyncDuration: undefined,
-                    liveMaxLatencyDuration: undefined,
                     manifestLoadingTimeOut: 10000,
                     manifestLoadingMaxRetry: 5,
                     levelLoadingTimeOut: 10000,
@@ -1067,49 +1057,53 @@
 
         searchBox.addEventListener('input', (e) => renderChannels(e.target.value));
 
-        function handleMobileTap(e) {
+        // CONTROL DE VISIBILIDAD (PANTALLA COMPLETA O NORMAL CON MOUSEMOVE)
+        function showControlsTemporarily() {
+            playerWrapper.classList.remove('hide-controls');
+            playerWrapper.classList.remove('normal-autohide');
+            clearTimeout(controlsTimeout);
+
+            controlsTimeout = setTimeout(() => {
+                if (!video.paused) {
+                    if (document.fullscreenElement) {
+                        playerWrapper.classList.add('hide-controls');
+                    } else {
+                        playerWrapper.classList.add('normal-autohide');
+                    }
+                    if (qualityPopupMenu) qualityPopupMenu.classList.remove('show');
+                }
+            }, TIEMPO_OCULTAR_CONTROLES);
+        }
+
+        playerWrapper.addEventListener('mousemove', () => {
+            showControlsTemporarily();
+        });
+
+        function handleFullscreenTouch(e) {
+            if (!document.fullscreenElement) return;
             if (e.target.closest('.quality-popup-menu, .sidebar, .mobile-menu-btn, .controls-overlay, .player-header')) return;
 
-            const isVisible = playerWrapper.classList.contains('touch-controls-visible') || playerWrapper.classList.contains('show-controls');
-
-            if (isVisible) {
-                playerWrapper.classList.remove('touch-controls-visible', 'show-controls');
+            if (playerWrapper.classList.contains('hide-controls')) {
+                playerWrapper.classList.remove('hide-controls');
+                showControlsTemporarily();
+            } else {
                 playerWrapper.classList.add('hide-controls');
                 if (qualityPopupMenu) qualityPopupMenu.classList.remove('show');
                 clearTimeout(controlsTimeout);
-            } else {
-                playerWrapper.classList.remove('hide-controls');
-                playerWrapper.classList.add('touch-controls-visible');
-                clearTimeout(controlsTimeout);
-
-                if (document.fullscreenElement) {
-                    controlsTimeout = setTimeout(() => {
-                        if (!video.paused && document.fullscreenElement) {
-                            playerWrapper.classList.remove('touch-controls-visible', 'show-controls');
-                            playerWrapper.classList.add('hide-controls');
-                            if (qualityPopupMenu) qualityPopupMenu.classList.remove('show');
-                        }
-                    }, TIEMPO_OCULTAR_CONTROLES);
-                }
             }
         }
 
-        playerWrapper.addEventListener('click', handleMobileTap);
-        playerWrapper.addEventListener('touchstart', handleMobileTap, { passive: true });
+        playerWrapper.addEventListener('click', handleFullscreenTouch);
+        playerWrapper.addEventListener('touchstart', handleFullscreenTouch, { passive: true });
 
         document.addEventListener('fullscreenchange', () => {
             clearTimeout(controlsTimeout);
             if (document.fullscreenElement) {
-                playerWrapper.classList.remove('hide-controls');
-                playerWrapper.classList.add('touch-controls-visible');
-                controlsTimeout = setTimeout(() => {
-                    if (!video.paused && document.fullscreenElement) {
-                        playerWrapper.classList.remove('touch-controls-visible', 'show-controls');
-                        playerWrapper.classList.add('hide-controls');
-                    }
-                }, TIEMPO_OCULTAR_CONTROLES);
+                playerWrapper.classList.remove('normal-autohide');
+                playerWrapper.classList.add('in-fullscreen');
+                showControlsTemporarily();
             } else {
-                playerWrapper.classList.remove('hide-controls', 'touch-controls-visible', 'show-controls');
+                playerWrapper.classList.remove('in-fullscreen', 'hide-controls', 'normal-autohide');
             }
         });
 
