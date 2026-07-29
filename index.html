@@ -270,7 +270,7 @@
             z-index: 10;
         }
 
-        /* Comportamiento original: solo se muestran al pasar el mouse por encima del reproductor */
+        /* En pantalla normal: hover de escritorio */
         .player-wrapper:hover .player-header,
         .player-wrapper:hover .controls-overlay {
             opacity: 1;
@@ -490,7 +490,14 @@
             box-shadow: 0 0 6px #dc3545;
         }
 
-        /* Estado oculto en Pantalla Completa (o por inactividad si aplica) */
+        /* ESTADO FORZADO PARA MÓVILES Y PANTALLA COMPLETA CUANDO SE TOCA LA PANTALLA */
+        #playerWrapper.touch-controls-visible .controls-overlay,
+        #playerWrapper.touch-controls-visible .player-header {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        /* Ocultamiento automático en pantalla completa */
         #playerWrapper.hide-controls .controls-overlay,
         #playerWrapper.hide-controls .player-header,
         #playerWrapper.hide-controls #qualityPopupMenu {
@@ -601,7 +608,6 @@
                 display: none;
             }
 
-            /* Ocultar la barra de progreso de volumen en dispositivos móviles */
             .volume-slider-container {
                 display: none !important;
             }
@@ -658,7 +664,7 @@
                     </div>
                 </div>
 
-                <video id="videoPlayer" autoplay playsinline></video>
+                <video id="videoPlayer" autoplay muted playsinline></video>
 
                 <div class="controls-overlay">
                     <div class="live-progress-bar">
@@ -776,6 +782,9 @@
 
         let hls = null;
         let currentChannel = null;
+        let controlsTimeout = null;
+
+        const TIEMPO_OCULTAR_CONTROLES = 2000;
 
         function renderChannels(filter = "") {
             channelListContainer.innerHTML = "";
@@ -873,7 +882,6 @@
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
                                 hls.startLoad();
-                                eval("hls.startLoad()");
                                 break;
                             case Hls.ErrorTypes.MEDIA_ERROR:
                                 hls.recoverMediaError();
@@ -1056,6 +1064,56 @@
         });
 
         searchBox.addEventListener('input', (e) => renderChannels(e.target.value));
+
+        // LÓGICA TÁCTIL Y DE PANTALLA COMPLETA ROBUSTA PARA MÓVILES REALES
+        function handleMobileTap(e) {
+            // Si hace click o toque dentro de los menús o botones, no alternar
+            if (e.target.closest('.quality-popup-menu, .sidebar, .mobile-menu-btn, .controls-overlay, .player-header')) return;
+
+            const isVisible = playerWrapper.classList.contains('touch-controls-visible') || playerWrapper.classList.contains('show-controls');
+
+            if (isVisible) {
+                // Ocultar controles manualmente si ya están visibles
+                playerWrapper.classList.remove('touch-controls-visible', 'show-controls');
+                playerWrapper.classList.add('hide-controls');
+                if (qualityPopupMenu) qualityPopupMenu.classList.remove('show');
+                clearTimeout(controlsTimeout);
+            } else {
+                // Mostrar controles y configurar auto-ocultamiento si está en pantalla completa
+                playerWrapper.classList.remove('hide-controls');
+                playerWrapper.classList.add('touch-controls-visible');
+                clearTimeout(controlsTimeout);
+
+                if (document.fullscreenElement) {
+                    controlsTimeout = setTimeout(() => {
+                        if (!video.paused && document.fullscreenElement) {
+                            playerWrapper.classList.remove('touch-controls-visible', 'show-controls');
+                            playerWrapper.classList.add('hide-controls');
+                            if (qualityPopupMenu) qualityPopupMenu.classList.remove('show');
+                        }
+                    }, TIEMPO_OCULTAR_CONTROLES);
+                }
+            }
+        }
+
+        playerWrapper.addEventListener('click', handleMobileTap);
+        playerWrapper.addEventListener('touchstart', handleMobileTap, { passive: true });
+
+        document.addEventListener('fullscreenchange', () => {
+            clearTimeout(controlsTimeout);
+            if (document.fullscreenElement) {
+                playerWrapper.classList.remove('hide-controls');
+                playerWrapper.classList.add('touch-controls-visible');
+                controlsTimeout = setTimeout(() => {
+                    if (!video.paused && document.fullscreenElement) {
+                        playerWrapper.classList.remove('touch-controls-visible', 'show-controls');
+                        playerWrapper.classList.add('hide-controls');
+                    }
+                }, TIEMPO_OCULTAR_CONTROLES);
+            } else {
+                playerWrapper.classList.remove('hide-controls', 'touch-controls-visible', 'show-controls');
+            }
+        });
 
         setInterval(() => {
             if (video.buffered.length > 0) {
