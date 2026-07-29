@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Canales Televisión</title>
 
     <link rel="icon" type="image/png" href="logo.png">
@@ -11,26 +11,16 @@
     <!-- Hls.js Library -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        :root {
-            --bg-dark: #0f0f11;
-            --panel-bg: rgba(18, 18, 22, 0.95);
-            --accent: #e50914;
-            --accent-glow: rgba(229, 9, 20, 0.35);
-            --card-hover: rgba(255, 255, 255, 0.06);
-            --text-main: #f1f1f1;
-            --text-muted: #8e8e93;
-            --border-color: rgba(255, 255, 255, 0.08);
-        }
-
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
+            background-color: #0f0f11;
+            color: #f1f1f1;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
             height: 100vh;
@@ -45,21 +35,63 @@
             flex-direction: row;
         }
 
+        /* BOTÓN MENÚ MÓVIL (HAMBURGUESA) */
+        .mobile-menu-btn {
+            display: none;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 40;
+            background: rgba(15, 15, 17, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            width: 44px;
+            height: 44px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .mobile-menu-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: #fff;
+        }
+
+        /* OVERLAY PARA CERRAR EL MENÚ EN MÓVIL */
+        .sidebar-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 25;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            opacity: 1;
+        }
+
         /* BARRA LATERAL IZQUIERDA */
         .sidebar {
             width: 340px;
-            background: var(--panel-bg);
+            background: rgba(18, 18, 22, 0.95);
             backdrop-filter: blur(20px);
-            border-right: 1px solid var(--border-color);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
             flex-direction: column;
-            z-index: 20;
+            z-index: 30;
             flex-shrink: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .sidebar-header {
             padding: 24px 20px 16px 20px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .sidebar-brand {
@@ -74,7 +106,7 @@
         }
 
         .sidebar-brand svg {
-            fill: var(--accent);
+            fill: #e50914;
             width: 26px;
             height: 26px;
         }
@@ -90,7 +122,7 @@
             left: 14px;
             width: 16px;
             height: 16px;
-            fill: var(--text-muted);
+            fill: #8e8e93;
             pointer-events: none;
         }
 
@@ -98,7 +130,7 @@
             width: 100%;
             padding: 10px 14px 10px 40px;
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 8px;
             color: #fff;
             font-size: 0.88rem;
@@ -107,9 +139,9 @@
         }
 
         .search-box:focus {
-            border-color: var(--accent);
+            border-color: #e50914;
             background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 12px var(--accent-glow);
+            box-shadow: 0 0 12px rgba(229, 9, 20, 0.35);
         }
 
         .channel-list {
@@ -119,6 +151,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            -webkit-overflow-scrolling: touch;
         }
 
         .channel-list::-webkit-scrollbar {
@@ -134,7 +167,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 12px;
+            padding: 12px;
             border-radius: 10px;
             cursor: pointer;
             background: transparent;
@@ -143,14 +176,14 @@
         }
 
         .channel-item:hover {
-            background: var(--card-hover);
+            background: rgba(255, 255, 255, 0.06);
             border-color: rgba(255, 255, 255, 0.05);
         }
 
         .channel-item.active {
             background: rgba(229, 9, 20, 0.12);
             border-color: rgba(229, 9, 20, 0.4);
-            box-shadow: inset 0 0 12px var(--accent-glow);
+            box-shadow: inset 0 0 12px rgba(229, 9, 20, 0.35);
         }
 
         .channel-logo {
@@ -159,7 +192,7 @@
             border-radius: 8px;
             object-fit: cover;
             background: #1a1a1f;
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             flex-shrink: 0;
         }
 
@@ -173,7 +206,7 @@
         .channel-title {
             font-weight: 600;
             font-size: 0.9rem;
-            color: var(--text-main);
+            color: #f1f1f1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -185,16 +218,16 @@
             gap: 5px;
             font-size: 0.7rem;
             font-weight: 700;
-            color: var(--accent);
+            color: #e50914;
             letter-spacing: 0.5px;
         }
 
         .live-dot {
             width: 6px;
             height: 6px;
-            background-color: var(--accent);
+            background-color: #e50914;
             border-radius: 50%;
-            box-shadow: 0 0 6px var(--accent);
+            box-shadow: 0 0 6px #e50914;
         }
 
         /* ÁREA PRINCIPAL */
@@ -294,8 +327,8 @@
         .live-progress-fill {
             width: 100%;
             height: 100%;
-            background: var(--accent);
-            box-shadow: 0 0 8px var(--accent);
+            background: #e50914;
+            box-shadow: 0 0 8px #e50914;
         }
 
         .controls-bottom {
@@ -342,7 +375,7 @@
             gap: 6px;
             font-size: 0.8rem;
             font-weight: 700;
-            color: var(--accent);
+            color: #e50914;
             background: rgba(229, 9, 20, 0.15);
             padding: 4px 10px;
             border-radius: 4px;
@@ -459,27 +492,17 @@
         }
 
         /* Estado oculto en Pantalla Completa */
-        #playerWrapper.hide-controls .controls-bar,
-        #playerWrapper.hide-controls .player-info,
-        #playerWrapper.hide-controls #qualityPopupMenu,
-        #playerWrapper.hide-controls>div,
-        #playerWrapper.hide-controls button {
+        #playerWrapper.hide-controls .controls-overlay,
+        #playerWrapper.hide-controls .player-header,
+        #playerWrapper.hide-controls #qualityPopupMenu {
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
             transition: opacity 0.4s ease, visibility 0.4s ease;
         }
 
-        /* Oculta también el cursor del mouse al estar inactivo */
         #playerWrapper.hide-controls {
             cursor: none !important;
-        }
-
-        /* Transición suave al reaparecer */
-        #playerWrapper .controls-bar,
-        #playerWrapper .player-info,
-        #playerWrapper button {
-            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
         .volume-wrapper {
@@ -527,43 +550,52 @@
             box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
         }
 
-        @media (max-width: 860px) {
-            .app-container {
-                flex-direction: column;
+        /* ADAPTACIÓN MÓVIL OPTIMIZADA */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
             }
 
-            .main-content {
-                height: 55vh;
-                flex: none;
+            .sidebar-overlay {
+                display: block;
+                pointer-events: none;
+            }
+
+            .sidebar-overlay.show {
+                pointer-events: auto;
             }
 
             .sidebar {
-                width: 100%;
-                height: 45vh;
-                border-right: none;
-                border-top: 1px solid var(--border-color);
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                transform: translateX(-100%);
+                width: 85%;
+                max-width: 320px;
+                box-shadow: 10px 0 30px rgba(0,0,0,0.7);
             }
 
-            .sidebar-header {
-                padding: 12px 16px;
+            .sidebar.mobile-open {
+                transform: translateX(0);
             }
 
-            .sidebar-brand {
-                font-size: 1rem;
-                margin-bottom: 10px;
+            .main-content {
+                width: 100vw;
+                height: 100vh;
             }
 
             .controls-overlay {
-                padding: 0 12px 12px 12px;
+                padding: 0 16px 16px 16px;
             }
 
             .player-header {
-                padding: 12px 16px;
+                padding: 16px 16px 16px 70px;
             }
 
             .left-controls,
             .right-controls {
-                gap: 8px;
+                gap: 10px;
             }
 
             .buffer-health-tag {
@@ -571,16 +603,16 @@
             }
 
             .volume-slider-container {
-                max-width: 50px;
-                opacity: 1;
+                display: none !important;
             }
 
             .volume-slider {
-                width: 50px;
+                width: 70px;
             }
 
             .quality-popup-menu {
-                width: 270px;
+                width: 260px;
+                right: -20px;
             }
         }
     </style>
@@ -589,6 +621,15 @@
 <body>
 
     <div class="app-container">
+
+        <!-- Botón flotante para desplegar canales en móvil -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" title="Abrir Canales">
+            <svg viewBox="0 0 24 24">
+                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+            </svg>
+        </button>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -733,6 +774,10 @@
         const bufferValue = document.getElementById('bufferValue');
         const bufferDot = document.querySelector('.buffer-dot');
 
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
         let hls = null;
         let currentChannel = null;
         let controlsTimeout = null;
@@ -760,11 +805,31 @@
                     loadChannel(channel);
                     document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
                     item.classList.add('active');
+                    closeMobileSidebar();
                 });
 
                 channelListContainer.appendChild(item);
             });
         }
+
+        function toggleMobileSidebar() {
+            sidebar.classList.toggle('mobile-open');
+            sidebarOverlay.classList.toggle('show');
+        }
+
+        function closeMobileSidebar() {
+            sidebar.classList.remove('mobile-open');
+            sidebarOverlay.classList.remove('show');
+        }
+
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMobileSidebar();
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            closeMobileSidebar();
+        });
 
         function loadChannel(channel) {
             currentChannel = channel;
@@ -1001,13 +1066,11 @@
 
         // LÓGICA DE OCULTAR CONTROLES (SÓLO EN PANTALLA COMPLETA)
         function handleUserActivity() {
-            // Si no está en pantalla completa, asegura que todo sea visible
             if (!document.fullscreenElement) {
                 playerWrapper.classList.remove('hide-controls');
                 return;
             }
 
-            // Muestra los controles y resetea el temporizador
             playerWrapper.classList.remove('hide-controls');
             clearTimeout(controlsTimeout);
 
