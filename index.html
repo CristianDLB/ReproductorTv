@@ -188,11 +188,14 @@
             box-shadow: inset 0 0 12px rgba(229, 9, 20, 0.35);
         }
 
-        .channel-logo {
-            width: 44px;
-            height: 44px;
+.channel-logo {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            min-height: 50px;
             border-radius: 8px;
-            object-fit: cover;
+            object-fit: contain; /* Cambiado de cover a contain para que no se recorte */
+            padding: 4px;        /* Un pequeño respiro para que la imagen no pegue a los bordes */
             background: #1a1a1f;
             border: 1px solid rgba(255, 255, 255, 0.08);
             flex-shrink: 0;
@@ -275,12 +278,16 @@
         }
 
         .player-channel-logo {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            object-fit: cover;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            min-height: 50px;
+            border-radius: 8px;
+            object-fit: contain; /* Cambiado de cover a contain para que no se recorte */
+            padding: 4px;        /* Un pequeño respiro para que la imagen no pegue a los bordes */
+            background: #1a1a1f;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
         }
 
         .player-channel-info {
@@ -322,7 +329,7 @@
         .live-progress-fill {
             width: 100%;
             height: 100%;
-            background: #e50914;
+            background: #e50914 !important;
             box-shadow: 0 0 8px #e50914;
         }
 
@@ -433,11 +440,13 @@
 
         .quality-option.selected .quality-check {
             visibility: visible;
+            color: #e50914;
         }
 
         .quality-option.selected {
             font-weight: 700;
             color: #fff;
+            background: rgba(229, 9, 20, 0.15);
         }
 
         .quality-title-group {
@@ -510,15 +519,26 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            z-index: 50;
         }
 
         .volume-slider-container {
             max-width: 0;
             opacity: 0;
-            overflow: hidden;
+            overflow: visible !important;
+            /* Cambiado para que no corte la bolita */
             transition: max-width 0.3s ease, opacity 0.3s ease;
             display: flex;
             align-items: center;
+            background: rgba(20, 20, 24, 0.9);
+            border-radius: 20px;
+            padding: 0;
+            z-index: 70;
+        }
+
+        .volume-slider-container.show {
+            max-width: 90px;
+            opacity: 1;
         }
 
         .volume-wrapper:hover .volume-slider-container,
@@ -531,12 +551,20 @@
         .volume-slider {
             -webkit-appearance: none;
             appearance: none;
-            width: 80px;
+            width: 70px;
             height: 6px;
             border-radius: 20px;
             outline: none;
+            border: none;
             cursor: pointer;
-            background: #e50914;
+            background: rgba(255, 255, 255, 0.3);
+            overflow: visible;
+        }
+
+        .volume-slider::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 20px;
+            background: transparent;
         }
 
         .volume-slider::-webkit-slider-thumb {
@@ -547,7 +575,11 @@
             border-radius: 50%;
             background: #ffffff;
             cursor: pointer;
-            box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+            position: relative;
+            z-index: 99;
+            margin-top: -4px;
+            /* Centra perfectamente la bolita sobre la línea de 6px */
         }
 
         /* ADAPTACIÓN MÓVIL OPTIMIZADA */
@@ -679,11 +711,12 @@
 
                             <div class="volume-wrapper">
                                 <button class="btn-control" id="volumeBtn" title="Silenciar">
-                                    <svg id="volumeHighIcon" viewBox="0 0 24 24">
+                                    <!-- Arreglado: Como arranca muteado, se muestra el icono de Mute y se oculta el de Volumen alto -->
+                                    <svg id="volumeHighIcon" viewBox="0 0 24 24" style="display:none;">
                                         <path
                                             d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
                                     </svg>
-                                    <svg id="volumeMuteIcon" viewBox="0 0 24 24" style="display:none;">
+                                    <svg id="volumeMuteIcon" viewBox="0 0 24 24">
                                         <path
                                             d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
                                     </svg>
@@ -691,7 +724,7 @@
 
                                 <div class="volume-slider-container">
                                     <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1"
-                                        step="0.01" value="1">
+                                        step="0.01" value="0">
                                 </div>
                             </div>
 
@@ -740,7 +773,7 @@
             },
             {
                 name: "ATV",
-                logo: "https://upload.wikimedia.org/wikipedia/commons/b/ba/ATV_%282016%29.png",
+                logo: "https://upload.wikimedia.org/wikipedia/commons/9/9d/ATV_%28Peru%29_-_2018_logo.png",
                 url: "https://d19e55ehz2il4i.cloudfront.net/ts:abr.m3u8"
             },
             {
@@ -748,6 +781,13 @@
                 logo: "https://yt3.googleusercontent.com/KRDAxhSJVhhRP7SACB06iIg7xczMDUur1iGWVlvAJ4XkxRCkY1qFOVqVo02bsnh7W1c9HjNA=s900-c-k-c0x00ffffff-no-rj",
                 url: "https://live-bd1.tv360.bitel.com.pe/manifest/america/master_clean_source.m3u8"
             },
+            {
+                name: "El Chavo",
+                logo: "https://gia.tv/streams/pptv/211465.png",
+                url: "https://live20.bozztv.com/giatvplayout7/giatv-211465/playlist.m3u8"
+            },
+
+
         ];
 
         const video = document.getElementById('videoPlayer');
@@ -1011,28 +1051,50 @@
             volumeSlider.style.background = `linear-gradient(to right, #ff0000 0%, #ff0000 ${percentage}%, #4a4a4a ${percentage}%, #4a4a4a 100%)`;
         }
 
+        function actualizarBarraVolumen(val) {
+            const porcentaje = val * 100;
+            volumeSlider.style.background = `linear-gradient(to right, #e50914 ${porcentaje}%, rgba(255, 255, 255, 0.3) ${porcentaje}%)`;
+        }
+
         volumeSlider.addEventListener('input', (e) => {
-            e.stopPropagation();
-            const val = e.target.value;
+            const val = parseFloat(e.target.value);
             video.volume = val;
-            video.muted = (val == 0);
-            if (volumeHighIcon && volumeMuteIcon) {
-                volumeHighIcon.style.display = video.muted ? 'none' : 'block';
-                volumeMuteIcon.style.display = video.muted ? 'block' : 'none';
-            }
-            updateVolumeSliderBackground(val);
-        });
+            video.muted = (val === 0);
 
-        volumeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+            actualizarBarraVolumen(val);
+
+            if (val === 0) {
+                volumeHighIcon.style.display = 'none';
+                volumeMuteIcon.style.display = 'block';
+            } else {
+                volumeHighIcon.style.display = 'block';
+                volumeMuteIcon.style.display = 'none';
+            }
+        });
+        const volumeSliderContainer = document.querySelector('.volume-slider-container');
+        let lastVolume = 1;
+
+        function updateSliderBackground(val) {
+            const percentage = val * 100;
+            volumeSlider.style.background = `linear-gradient(to right, #e50914 ${percentage}%, rgba(255, 255, 255, 0.2) ${percentage}%)`;
+        }
+
+        volumeBtn.addEventListener('click', () => {
             video.muted = !video.muted;
-            if (volumeHighIcon && volumeMuteIcon) {
-                volumeHighIcon.style.display = video.muted ? 'none' : 'block';
-                volumeMuteIcon.style.display = video.muted ? 'block' : 'none';
+            if (video.muted) {
+                volumeHighIcon.style.display = 'none';
+                volumeMuteIcon.style.display = 'block';
+                volumeSlider.value = 0;
+                actualizarBarraVolumen(0);
+            } else {
+                volumeHighIcon.style.display = 'block';
+                volumeMuteIcon.style.display = 'none';
+                if (video.volume === 0) video.volume = 0.5;
+                volumeSlider.value = video.volume;
+                actualizarBarraVolumen(video.volume);
             }
-            updateVolumeSliderBackground(video.muted ? 0 : volumeSlider.value);
         });
-
+        updateSliderBackground(volumeSlider.value);
         updateVolumeSliderBackground(volumeSlider.value);
 
         qualityBtn.addEventListener('click', (e) => {
