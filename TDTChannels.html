@@ -799,7 +799,7 @@
 
     </div>
 
-    <script>
+<script>
         let channels = [];
         const defaultLogo = "https://i.imgur.com/8Qp87Gf.png";
 
@@ -832,12 +832,43 @@
         let hls = null;
         let currentChannel = null;
         let hideControlsTimeout = null;
+        let lastVolume = 1; // Variable para recordar el volumen antes de silenciar
 
-        // Función para actualizar el fondo con el progreso dinámico (relleno azul)
-        function updateVolumeSliderBackground(slider) {
-            const val = (slider.value - slider.min) / (slider.max - slider.min) * 100;
-            slider.style.background = `linear-gradient(to right, #0070f3 0%, #0070f3 ${val}%, rgba(255, 255, 255, 0.3) ${val}%, rgba(255, 255, 255, 0.3) 100%)`;
+        // --- GESTIÓN UNIFICADA Y CORREGIDA DEL VOLUMEN (AZUL) ---
+        function actualizarBarraVolumen(val) {
+            const porcentaje = val * 100;
+            volumeSlider.value = val;
+            volumeSlider.style.background = `linear-gradient(to right, #0070f3 ${porcentaje}%, rgba(255, 255, 255, 0.3) ${porcentaje}%)`;
+
+            if (val === 0 || video.muted) {
+                volumeHighIcon.style.display = 'none';
+                volumeMuteIcon.style.display = 'block';
+            } else {
+                volumeHighIcon.style.display = 'block';
+                volumeMuteIcon.style.display = 'none';
+            }
         }
+
+        volumeSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            video.volume = val;
+            video.muted = (val === 0);
+            if (val > 0) lastVolume = val;
+            actualizarBarraVolumen(val);
+        });
+
+        volumeBtn.addEventListener('click', () => {
+            if (video.muted || video.volume === 0) {
+                video.muted = false;
+                video.volume = lastVolume > 0 ? lastVolume : 0.5;
+                actualizarBarraVolumen(video.volume);
+            } else {
+                lastVolume = video.volume;
+                video.muted = true;
+                video.volume = 0;
+                actualizarBarraVolumen(0);
+            }
+        });
 
         // Ocultar controles automáticamente por inactividad
         function resetControlsTimer() {
@@ -858,7 +889,9 @@
 
         // Carga automática del archivo tv.m3u8 ubicado en la misma carpeta al iniciar
         window.addEventListener('DOMContentLoaded', () => {
-            updateVolumeSliderBackground(volumeSlider);
+            video.volume = 1;
+            actualizarBarraVolumen(video.volume);
+
             fetch('tv.m3u8')
                 .then(response => {
                     if (!response.ok) throw new Error('No se pudo encontrar el archivo tv.m3u8');
@@ -885,13 +918,11 @@
                 if (line.startsWith('#EXTINF:')) {
                     currentChannelObj = { name: "Canal sin nombre", logo: defaultLogo, url: "" };
 
-                    // Extraer logo si existe (tvg-logo="...")
                     const logoMatch = line.match(/tvg-logo="([^"]+)"/);
                     if (logoMatch && logoMatch[1]) {
                         currentChannelObj.logo = logoMatch[1];
                     }
 
-                    // Extraer nombre del canal (después de la última coma)
                     const commaIndex = line.lastIndexOf(',');
                     if (commaIndex !== -1) {
                         currentChannelObj.name = line.substring(commaIndex + 1).trim();
@@ -994,8 +1025,12 @@
                 });
 
                 hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
-                    if (hls.autoLevelEnabled) {
-                        updateAutoText(data.level);
+                    const autoDetailsText = document.getElementById('autoDetailsText');
+                    if (autoDetailsText && hls.autoLevelEnabled) {
+                        const lvl = hls.levels[data.level];
+                        if (lvl) {
+                            autoDetailsText.innerText = `${lvl.height}p (${(lvl.bitrate / 1000000).toFixed(1)} Mbps)`;
+                        }
                     }
                 });
 
@@ -1024,21 +1059,27 @@
             }
         }
 
-function setupQualityMenu() {
+        function setupQualityMenu() {
             qualityPopupMenu.innerHTML = "";
             if (!hls || !hls.levels || hls.levels.length === 0) return;
 
             let currentQualityText = "Dinámico";
             let currentMbpsText = "";
-            const activeLevelIndex = hls.autoLevelEnabled ? hls.currentLevel : hls.loadLevel;
+            const activeLevelIndex = hls.autoLevelEnabled ? (hls.currentLevel !== -1 ? hls.currentLevel : hls.loadLevel) : hls.currentLevel;
             
             if (activeLevelIndex !== -1 && hls.levels[activeLevelIndex]) {
                 currentQualityText = `${hls.levels[activeLevelIndex].height}p`;
                 currentMbpsText = ` (${(hls.levels[activeLevelIndex].bitrate / 1000000).toFixed(1)} Mbps)`;
-            } else if (hls.levels[hls.firstLevel]) {
+            } else if (hls.firstLevel !== undefined && hls.levels[hls.firstLevel]) {
                 currentQualityText = `${hls.levels[hls.firstLevel].height}p`;
                 currentMbpsText = ` (${(hls.levels[hls.firstLevel].bitrate / 1000000).toFixed(1)} Mbps)`;
             }
+
+            const optionElements = [];
+
+            const closeQualityMenu = () => {
+                qualityPopupMenu.classList.remove('active', 'show', 'open');
+            };
 
             const autoOption = document.createElement('div');
             autoOption.className = `quality-option ${hls.autoLevelEnabled ? 'selected' : ''}`;
@@ -1050,17 +1091,35 @@ function setupQualityMenu() {
                 </div>
                 <span class="quality-details-text" id="autoDetailsText">${currentQualityText}${currentMbpsText}</span>
             `;
+            
             autoOption.addEventListener('click', () => {
                 hls.currentLevel = -1;
-                updateQualityMenuSelection();
+                optionElements.forEach(el => el.classList.remove('selected'));
+                autoOption.classList.add('selected');
+
+                const autoDetails = document.getElementById('autoDetailsText');
+                if (autoDetails) {
+                    const instantIndex = hls.loadLevel !== -1 ? hls.loadLevel : (hls.firstLevel !== undefined ? hls.firstLevel : 0);
+                    if (hls.levels[instantIndex]) {
+                        const lvl = hls.levels[instantIndex];
+                        autoDetails.innerText = `${lvl.height}p (${(lvl.bitrate / 1000000).toFixed(1)} Mbps)`;
+                    }
+                }
+                closeQualityMenu();
             });
+            
             qualityPopupMenu.appendChild(autoOption);
+            optionElements.push(autoOption);
 
             const sortedLevels = [...hls.levels].map((level, originalIndex) => ({ level, originalIndex }));
-            sortedLevels.sort((a, b) => b.level.height - a.level.height);
+            sortedLevels.sort((a, b) => {
+                const heightDiff = (b.level.height || 0) - (a.level.height || 0);
+                if (heightDiff !== 0) return heightDiff;
+                return (b.level.bitrate || 0) - (a.level.bitrate || 0);
+            });
 
             sortedLevels.forEach(({ level, originalIndex }) => {
-                const height = level.height;
+                const height = level.height || 0;
                 let resolutionBadge = "";
                 
                 if (height >= 1080) {
@@ -1069,10 +1128,11 @@ function setupQualityMenu() {
                     resolutionBadge = '<span class="quality-badge" style="color: #4364F7; background: rgba(67, 100, 247, 0.15); padding: 1px 5px; border-radius: 4px;">HD</span>';
                 }
 
-                const mbps = (level.bitrate / 1000000).toFixed(1);
-
+                const mbps = ((level.bitrate || 0) / 1000000).toFixed(1);
                 const option = document.createElement('div');
-                option.className = `quality-option ${!hls.autoLevelEnabled && hls.currentLevel === originalIndex ? 'selected' : ''}`;
+                const isSelected = !hls.autoLevelEnabled && hls.currentLevel === originalIndex;
+                option.className = `quality-option ${isSelected ? 'selected' : ''}`;
+                
                 option.innerHTML = `
                     <span class="quality-check">✓</span>
                     <div class="quality-title-group">
@@ -1081,20 +1141,17 @@ function setupQualityMenu() {
                     </div>
                     <span class="quality-details-text">${mbps} Mbps</span>
                 `;
+                
                 option.addEventListener('click', () => {
                     hls.currentLevel = originalIndex;
-                    updateQualityMenuSelection();
+                    optionElements.forEach(el => el.classList.remove('selected'));
+                    option.classList.add('selected');
+                    closeQualityMenu();
                 });
-                qualityPopupMenu.appendChild(option);
-            });
-        }
 
-        function updateAutoText(levelIndex) {
-            const autoDetailText = document.getElementById('autoDetailText');
-            if (autoDetailText && hls && hls.levels[levelIndex]) {
-                const lvl = hls.levels[levelIndex];
-                autoDetailText.textContent = lvl.height ? `${lvl.height}p` : '';
-            }
+                qualityPopupMenu.appendChild(option);
+                optionElements.push(option);
+            });
         }
 
         function updatePlayState(isPlaying) {
@@ -1117,36 +1174,6 @@ function setupQualityMenu() {
                 updatePlayState(false);
                 mainContent.classList.remove('hide-ui', 'hide-cursor');
                 clearTimeout(hideControlsTimeout);
-            }
-        });
-
-        volumeBtn.addEventListener('click', () => {
-            if (video.muted || video.volume === 0) {
-                video.muted = false;
-                video.volume = volumeSlider.value > 0 ? volumeSlider.value : 0.5;
-                volumeSlider.value = video.volume;
-                updateVolumeSliderBackground(volumeSlider);
-                volumeHighIcon.style.display = "block";
-                volumeMuteIcon.style.display = "none";
-            } else {
-                video.muted = true;
-                volumeHighIcon.style.display = "none";
-                volumeMuteIcon.style.display = "block";
-            }
-        });
-
-        volumeSlider.addEventListener('input', (e) => {
-            const val = parseFloat(e.target.value);
-            video.volume = val;
-            updateVolumeSliderBackground(e.target);
-            if (val > 0) {
-                video.muted = false;
-                volumeHighIcon.style.display = "block";
-                volumeMuteIcon.style.display = "none";
-            } else {
-                video.muted = true;
-                volumeHighIcon.style.display = "none";
-                volumeMuteIcon.style.display = "block";
             }
         });
 

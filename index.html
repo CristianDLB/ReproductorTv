@@ -972,11 +972,18 @@
                     setupQualityMenu();
                 });
 
-                hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
-                    if (hls.autoLevelEnabled) {
-                        updateAutoText(data.level);
-                    }
-                });
+hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+    // Si está en automático, actualizamos el texto dinámico de los Mbps y resolución
+    const autoDetailsText = document.getElementById('autoDetailsText');
+    if (autoDetailsText && hls.autoLevelEnabled) {
+        const lvl = hls.levels[data.level];
+        if (lvl) {
+            autoDetailsText.innerText = `${lvl.height}p (${(lvl.bitrate / 1000000).toFixed(1)} Mbps)`;
+        }
+    }
+});
+
+                
 
                 hls.on(Hls.Events.ERROR, (event, data) => {
                     if (data.fatal) {
@@ -1024,76 +1031,99 @@
         }
 
 function setupQualityMenu() {
-            qualityPopupMenu.innerHTML = "";
-            if (!hls || !hls.levels || hls.levels.length === 0) return;
+    qualityPopupMenu.innerHTML = "";
+    if (!hls || !hls.levels || hls.levels.length === 0) return;
 
-            let currentQualityText = "Dinámico";
-            let currentMbpsText = "";
-            const activeLevelIndex = hls.autoLevelEnabled ? hls.currentLevel : hls.loadLevel;
-            
-            if (activeLevelIndex !== -1 && hls.levels[activeLevelIndex]) {
-                currentQualityText = `${hls.levels[activeLevelIndex].height}p`;
-                currentMbpsText = ` (${(hls.levels[activeLevelIndex].bitrate / 1000000).toFixed(1)} Mbps)`;
-            } else if (hls.levels[hls.firstLevel]) {
-                currentQualityText = `${hls.levels[hls.firstLevel].height}p`;
-                currentMbpsText = ` (${(hls.levels[hls.firstLevel].bitrate / 1000000).toFixed(1)} Mbps)`;
-            }
-
-            const autoOption = document.createElement('div');
-            autoOption.className = `quality-option ${hls.autoLevelEnabled ? 'selected' : ''}`;
-            autoOption.innerHTML = `
-                <span class="quality-check">✓</span>
-                <div class="quality-title-group">
-                    <span>Automático</span>
-                    <span class="quality-badge" style="color: #e50914; background: rgba(229, 9, 20, 0.15); padding: 1px 5px; border-radius: 4px;">Auto</span>
-                </div>
-                <span class="quality-details-text" id="autoDetailsText">${currentQualityText}${currentMbpsText}</span>
-            `;
-            autoOption.addEventListener('click', () => {
-                hls.currentLevel = -1;
-                updateQualityMenuSelection();
-            });
-            qualityPopupMenu.appendChild(autoOption);
-
-            const sortedLevels = [...hls.levels].map((level, originalIndex) => ({ level, originalIndex }));
-            
-            // ORDENAMIENTO ESTRICTO: De mayor a menor calidad (altura) y en caso de empate, por mayor Mbps (bitrate)
-            sortedLevels.sort((a, b) => {
-                const heightDiff = (b.level.height || 0) - (a.level.height || 0);
-                if (heightDiff !== 0) return heightDiff;
-                return (b.level.bitrate || 0) - (a.level.bitrate || 0);
-            });
-
-            sortedLevels.forEach(({ level, originalIndex }) => {
-                const height = level.height || 0;
-                let resolutionBadge = "";
-                
-                if (height >= 1080) {
-                    // FHD con un tono rojo más brillante y llamativo (#ff1a1a)
-                    resolutionBadge = '<span class="quality-badge" style="color: #ff1a1a; background: rgba(255, 26, 26, 0.2); padding: 1px 6px; border-radius: 4px; font-weight: 800; border: 1px solid rgba(255, 26, 26, 0.4);">FHD</span>';
-                } else if (height >= 720) {
-                    resolutionBadge = '<span class="quality-badge" style="color: #e50914; background: rgba(229, 9, 20, 0.15); padding: 1px 5px; border-radius: 4px;">HD</span>';
-                }
-
-                const mbps = (level.bitrate / 1000000).toFixed(1);
-
-                const option = document.createElement('div');
-                option.className = `quality-option ${!hls.autoLevelEnabled && hls.currentLevel === originalIndex ? 'selected' : ''}`;
-                option.innerHTML = `
-                    <span class="quality-check">✓</span>
-                    <div class="quality-title-group">
-                        <span>${height}p</span>
-                        ${resolutionBadge}
-                    </div>
-                    <span class="quality-details-text">${mbps} Mbps</span>
-                `;
-                option.addEventListener('click', () => {
-                    hls.currentLevel = originalIndex;
-                    updateQualityMenuSelection();
-                });
-                qualityPopupMenu.appendChild(option);
-            });
+    // Función interna para calcular el texto actual del modo automático
+    const getAutoDetailsText = () => {
+        const activeLevelIndex = hls.autoLevelEnabled ? (hls.currentLevel !== -1 ? hls.currentLevel : hls.loadLevel) : hls.loadLevel;
+        if (activeLevelIndex !== -1 && hls.levels[activeLevelIndex]) {
+            const lvl = hls.levels[activeLevelIndex];
+            return `${lvl.height}p (${(lvl.bitrate / 1000000).toFixed(1)} Mbps)`;
+        } else if (hls.firstLevel !== undefined && hls.levels[hls.firstLevel]) {
+            const lvl = hls.levels[hls.firstLevel];
+            return `${lvl.height}p (${(lvl.bitrate / 1000000).toFixed(1)} Mbps)`;
         }
+        return "Dinámico";
+    };
+
+    const optionElements = [];
+
+    // --- OPCIÓN AUTOMÁTICO ---
+    const autoOption = document.createElement('div');
+    autoOption.className = `quality-option ${hls.autoLevelEnabled ? 'selected' : ''}`;
+    autoOption.innerHTML = `
+        <span class="quality-check">✓</span>
+        <div class="quality-title-group">
+            <span>Automático</span>
+            <span class="quality-badge" style="color: #e50914; background: rgba(229, 9, 20, 0.15); padding: 1px 5px; border-radius: 4px;">Auto</span>
+        </div>
+        <span class="quality-details-text" id="autoDetailsText">${getAutoDetailsText()}</span>
+    `;
+    
+    autoOption.addEventListener('click', () => {
+        hls.currentLevel = -1; // Activa el modo automático en HLS.js
+        
+        // Cambio visual instantáneo (fondo y check)
+        optionElements.forEach(el => el.classList.remove('selected'));
+        autoOption.classList.add('selected');
+
+        // Actualización inmediata del texto dinámico al hacer clic
+        const autoDetails = document.getElementById('autoDetailsText');
+        if (autoDetails) {
+            autoDetails.innerText = getAutoDetailsText();
+        }
+    });
+    
+    qualityPopupMenu.appendChild(autoOption);
+    optionElements.push(autoOption);
+
+    // --- LISTA DE CALIDADES ORDENADAS ---
+    const sortedLevels = [...hls.levels].map((level, originalIndex) => ({ level, originalIndex }));
+    
+    sortedLevels.sort((a, b) => {
+        const heightDiff = (b.level.height || 0) - (a.level.height || 0);
+        if (heightDiff !== 0) return heightDiff;
+        return (b.level.bitrate || 0) - (a.level.bitrate || 0);
+    });
+
+    sortedLevels.forEach(({ level, originalIndex }) => {
+        const height = level.height || 0;
+        let resolutionBadge = "";
+        
+        if (height >= 1080) {
+            resolutionBadge = '<span class="quality-badge" style="color: #ff1a1a; background: rgba(255, 26, 26, 0.2); padding: 1px 6px; border-radius: 4px; font-weight: 800; border: 1px solid rgba(255, 26, 26, 0.4);">FHD</span>';
+        } else if (height >= 720) {
+            resolutionBadge = '<span class="quality-badge" style="color: #e50914; background: rgba(229, 9, 20, 0.15); padding: 1px 5px; border-radius: 4px;">HD</span>';
+        }
+
+        const mbps = ((level.bitrate || 0) / 1000000).toFixed(1);
+
+        const option = document.createElement('div');
+        const isSelected = !hls.autoLevelEnabled && hls.currentLevel === originalIndex;
+        option.className = `quality-option ${isSelected ? 'selected' : ''}`;
+        
+        option.innerHTML = `
+            <span class="quality-check">✓</span>
+            <div class="quality-title-group">
+                <span>${height}p</span>
+                ${resolutionBadge}
+            </div>
+            <span class="quality-details-text">${mbps} Mbps</span>
+        `;
+        
+        option.addEventListener('click', () => {
+            hls.currentLevel = originalIndex; // Fija la calidad manual
+            
+            // Cambio visual instantáneo (fondo y check)
+            optionElements.forEach(el => el.classList.remove('selected'));
+            option.classList.add('selected');
+        });
+
+        qualityPopupMenu.appendChild(option);
+        optionElements.push(option);
+    });
+}
 
         function updateQualityUI(selectedIndex) {
             const options = qualityPopupMenu.querySelectorAll('.quality-option');
@@ -1103,6 +1133,11 @@ function setupQualityMenu() {
             });
             qualityPopupMenu.classList.remove('show');
         }
+
+        function updateQualityMenuSelection() {
+    // Vuelve a generar todo el menú para reflejar el estado actual de hls.currentLevel y hls.autoLevelEnabled
+    setupQualityMenu();
+}
 
         playStopBtn.addEventListener('click', (e) => {
             e.stopPropagation();
